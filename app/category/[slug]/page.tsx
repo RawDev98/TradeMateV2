@@ -19,7 +19,6 @@ const categoryData = {
     tools: [
       { name: "Roof Estimator", image: "/images/trade.jpg", href: "/tools/roof-estimator" },
       { name: "Materials Calculator", image: "/images/trade.jpg", href: "/tools/materials-calculator" },
-      { name: "Project Planner", image: "/images/trade.jpg", href: "/tools/project-planner" },
       { name: "Licensing & Compliance", image: "/images/trade.jpg", href: "/tools/licensing" },
     ],
   },

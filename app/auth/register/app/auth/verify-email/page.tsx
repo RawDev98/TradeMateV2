@@ -62,7 +62,6 @@ export default function RegisterPage() {
           name: formData.name,
         },
       })
-      
 
       await signUp.prepareEmailAddressVerification({ strategy: "email_code" })
 
@@ -73,10 +72,10 @@ export default function RegisterPage() {
 
       router.push("/auth/verify-email")
     } catch (error: any) {
-      console.error("Clerk signup error:", error)
+      console.error("Signup error:", error)
       toast({
         title: "Error",
-        description: error?.errors?.[0]?.message || "Signup failed",
+        description: error?.errors?.[0]?.message || error.message || "Signup failed",
         variant: "destructive",
       })
     } finally {
@@ -152,6 +151,10 @@ export default function RegisterPage() {
                   className="bg-white/20"
                 />
               </div>
+
+              {/* 👇 Clerk Smart CAPTCHA placeholder (silences error) */}
+              <div id="clerk-captcha" style={{ display: "none" }} />
+
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? (
                   <>
@@ -177,4 +180,3 @@ export default function RegisterPage() {
     </div>
   )
 }
-
