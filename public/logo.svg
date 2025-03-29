@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <path fill="#ffffff" d="M100 20 L40 60 L40 100 L100 140 L160 100 L160 60 Z" />
+  <path fill="none" stroke="#ffffff" stroke-width="4" d="M100 20 L40 60 L40 100 L100 140 L160 100 L160 60 Z" />
+  <path fill="none" stroke="#ffffff" stroke-width="4" d="M100 20 L100 140" />
+  <path fill="none" stroke="#ffffff" stroke-width="4" d="M40 60 L100 100 L160 60" />
+</svg>
+

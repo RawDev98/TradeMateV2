@@ -1,0 +1,163 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  password      String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  projects      Project[]
+}
+
+model Project {
+  id                String    @id @default(cuid())
+  name              String
+  clientName        String?
+  location          String?
+  description       String?
+  budget            Float?
+  startDate         DateTime?
+  endDate           DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  userId            String
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tasks             Task[]
+  materials         Material[]
+  notes             Note[]
+
+  @@index([userId])
+}
+
+model Task {
+  id            String    @id @default(cuid())
+  title         String
+  description   String?
+  status        String    @default("not-started") // not-started, in-progress, completed, delayed
+  dueDate       DateTime?
+  assignedTo    String?
+  notes         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  projectId     String
+  project       Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  materials     TaskMaterial[]
+
+  @@index([projectId])
+}
+
+model Material {
+  id            String    @id @default(cuid())
+  name          String
+  quantity      Float
+  unit          String
+  ordered       Boolean   @default(false)
+  received      Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  projectId     String
+  project       Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  tasks         TaskMaterial[]
+
+  @@index([projectId])
+}
+
+model TaskMaterial {
+  id            String    @id @default(cuid())
+  taskId        String
+  materialId    String
+  quantity      Float
+  task          Task      @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  material      Material  @relation(fields: [materialId], references: [id], onDelete: Cascade)
+
+  @@index([taskId])
+  @@index([materialId])
+}
+
+model Note {
+  id            String    @id @default(cuid())
+  title         String
+  content       String
+  category      String    @default("general") // general, client, supplier, important
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  projectId     String
+  project       Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+}
+
+// For the Roof Estimator tool
+model RoofEstimate {
+  id            String    @id @default(cuid())
+  name          String?
+  length        Float
+  width         Float
+  pitch         Float
+  overhang      Float     @default(0.3)
+  roofArea      Float
+  tilesNeeded   Int
+  battensNeeded Int
+  fasciaMeter   Float
+  gutterMeter   Float
+  ridgeCapping  Float
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  userId        String?
+}
+
+// For the Quote Generator tool
+model Quote {
+  id            String    @id @default(cuid())
+  quoteNumber   String    @unique
+  clientName    String
+  clientEmail   String?
+  projectName   String
+  quoteDate     DateTime  @default(now())
+  validUntil    DateTime?
+  notes         String?
+  taxRate       Float     @default(10)
+  subtotal      Float
+  tax           Float
+  total         Float
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  userId        String?
+  lineItems     QuoteLineItem[]
+}
+
+model QuoteLineItem {
+  id            String    @id @default(cuid())
+  description   String
+  quantity      Float
+  unitPrice     Float
+  total         Float
+  quoteId       String
+  quote         Quote     @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+
+  @@index([quoteId])
+}
+
+// For the Material Recognition tool
+model MaterialLibrary {
+  id            String    @id @default(cuid())
+  name          String
+  category      String
+  description   String?
+  imageUrl      String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  userId        String?
+}
+
