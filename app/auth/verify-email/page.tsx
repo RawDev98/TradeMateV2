@@ -2,181 +2,83 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
-import { MainNav } from "@/components/main-nav"
-import { Logo } from "@/components/logo"
-import { Loader2 } from "lucide-react"
-import { useToast } from "@/hooks/use-toast"
+import { Button } from "@/components/ui/button"
 import { useSignUp } from "@clerk/nextjs"
+import { useToast } from "@/hooks/use-toast"
+import { Loader2 } from "lucide-react"
 
-export default function RegisterPage() {
+export default function VerifyEmailPage() {
   const router = useRouter()
-  const { toast } = useToast()
   const { signUp, isLoaded } = useSignUp()
+  const { toast } = useToast()
 
-  const [isLoading, setIsLoading] = useState(false)
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-  })
+  const [code, setCode] = useState("")
+  const [isVerifying, setIsVerifying] = useState(false)
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
-  }
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault()
-
-    if (formData.password !== formData.confirmPassword) {
-      toast({
-        title: "Error",
-        description: "Passwords do not match",
-        variant: "destructive",
-      })
-      return
-    }
-
     if (!isLoaded) return
 
-    setIsLoading(true)
+    setIsVerifying(true)
 
     try {
-      await signUp.create({
-        emailAddress: formData.email,
-        password: formData.password,
-        unsafeMetadata: {
-          name: formData.name,
-        },
-      })
+      const result = await signUp.attemptEmailAddressVerification({ code })
 
-      await signUp.prepareEmailAddressVerification({ strategy: "email_code" })
+      if (result.status === "complete") {
+        toast({
+          title: "Success",
+          description: "Your email has been verified. You're now signed in.",
+        })
 
-      toast({
-        title: "Success",
-        description: "Verification email sent. Check your inbox.",
-      })
-
-      router.push("/auth/verify-email")
+        router.push("/dashboard") // change to your actual post-login page
+      } else {
+        toast({
+          title: "Error",
+          description: "Verification incomplete. Please try again.",
+          variant: "destructive",
+        })
+      }
     } catch (error: any) {
-      console.error("Signup error:", error)
+      console.error("Verification error:", error)
       toast({
         title: "Error",
-        description: error?.errors?.[0]?.message || error.message || "Signup failed",
+        description:
+          error?.errors?.[0]?.message || "Invalid code. Please try again.",
         variant: "destructive",
       })
     } finally {
-      setIsLoading(false)
+      setIsVerifying(false)
     }
   }
 
   return (
-    <div className="min-h-screen gradient-bg">
-      <MainNav />
-      <main className="container pt-24 pb-16">
-        <div className="flex flex-col items-center justify-center mt-8 mb-12">
-          <Logo />
-        </div>
-
-        <Card className="glass-card max-w-md mx-auto">
-          <CardHeader>
-            <CardTitle>Register</CardTitle>
-            <CardDescription>
-              Create a new account to get started
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Name</Label>
-                <Input
-                  id="name"
-                  name="name"
-                  placeholder="Enter your name"
-                  required
-                  value={formData.name}
-                  onChange={handleChange}
-                  className="bg-white/20"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  placeholder="Enter your email"
-                  required
-                  value={formData.email}
-                  onChange={handleChange}
-                  className="bg-white/20"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  name="password"
-                  type="password"
-                  placeholder="Create a password"
-                  required
-                  value={formData.password}
-                  onChange={handleChange}
-                  className="bg-white/20"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirm Password</Label>
-                <Input
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  type="password"
-                  placeholder="Confirm your password"
-                  required
-                  value={formData.confirmPassword}
-                  onChange={handleChange}
-                  className="bg-white/20"
-                />
-              </div>
-
-              {/* 👇 Clerk Smart CAPTCHA placeholder (silences error) */}
-              <div id="clerk-captcha" style={{ display: "none" }} />
-
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Creating account...
-                  </>
-                ) : (
-                  "Register"
-                )}
-              </Button>
-            </form>
-          </CardContent>
-          <CardFooter className="flex justify-center">
-            <p className="text-sm text-muted-foreground">
-              Already have an account?{" "}
-              <Link href="/auth/login" className="text-primary hover:underline">
-                Login
-              </Link>
-            </p>
-          </CardFooter>
-        </Card>
-      </main>
-    </div>
+    <main className="min-h-screen flex items-center justify-center px-4">
+      <form onSubmit={handleVerify} className="w-full max-w-sm space-y-4">
+        <h1 className="text-xl font-semibold text-center">Verify Your Email</h1>
+        <p className="text-sm text-muted-foreground text-center">
+          Enter the 6-digit code we sent to your email.
+        </p>
+        <Input
+          type="text"
+          inputMode="numeric"
+          pattern="[0-9]*"
+          placeholder="Enter verification code"
+          value={code}
+          onChange={(e) => setCode(e.target.value)}
+          required
+        />
+        <Button type="submit" className="w-full" disabled={isVerifying}>
+          {isVerifying ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Verifying...
+            </>
+          ) : (
+            "Verify Email"
+          )}
+        </Button>
+      </form>
+    </main>
   )
 }
